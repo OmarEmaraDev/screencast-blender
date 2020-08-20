@@ -42,9 +42,15 @@ class ScreenCast(bpy.types.Operator):
     bl_idname = "screen.screen_cast"
     bl_label = "Screen Cast"
 
+    timerDuration: bpy.props.FloatProperty(name = "Timer Duration", default = 0.1)
+
     frame = None
     timer = None
     timestamp = None
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
 
     def modal(self, context, event):
         if self.frame > context.scene.frame_end:
@@ -66,7 +72,7 @@ class ScreenCast(bpy.types.Operator):
 
     def execute(self, context):
         wm = context.window_manager
-        self.timer = wm.event_timer_add(0.1, window = context.window)
+        self.timer = wm.event_timer_add(self.timerDuration, window = context.window)
         wm.modal_handler_add(self)
 
         self.frame = context.scene.frame_start
