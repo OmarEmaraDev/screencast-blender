@@ -26,7 +26,8 @@ bl_info = {
     "location": 'Search For "Screen Cast"',
     "description": (
         "Take a screencast of the screen in the scene's frame range "
-        "and save it in ~/Videos/screencasts/<timestamp>/"
+        "and save it in ~/Videos/screencasts/<timestamp>/ creating "
+        "an H.264 MP4 video using ffmpeg if possible"
     ),
     "warning": "",
     "doc_url": "",
@@ -35,6 +36,8 @@ bl_info = {
 }
 
 import bpy
+import shutil
+import subprocess
 from datetime import datetime
 from os.path import expanduser
 
@@ -43,6 +46,7 @@ class ScreenCast(bpy.types.Operator):
     bl_label = "Screen Cast"
 
     timerDuration: bpy.props.FloatProperty(name = "Timer Duration", default = 0.1)
+    createVideo: bpy.props.BoolProperty(name = "Create Video", default = True)
 
     frame = None
     timer = None
@@ -85,6 +89,22 @@ class ScreenCast(bpy.types.Operator):
     def finish(self, context):
         wm = context.window_manager
         wm.event_timer_remove(self.timer)
+
+        if self.createVideo and shutil.which("ffmpeg") is not None:
+            subprocess.run([
+                "ffmpeg",
+                "-framerate",
+                str(int(context.scene.render.fps / context.scene.render.fps_base)),
+                "-pattern_type",
+                "glob",
+                "-i",
+                expanduser(f"~/Videos/screencasts/{self.timestamp}/*.png"),
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                expanduser(f"~/Videos/screencasts/{self.timestamp}/output.mp4"),
+            ])
 
     def cancel(self, context):
         self.finish(context)
