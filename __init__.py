@@ -66,11 +66,11 @@ class ScreenCast(bpy.types.Operator):
             return {"CANCELLED"}
 
         if event.type == "TIMER":
-            context.scene.frame_set(self.frame)
             path = f"~/Videos/screencasts/{self.timestamp}/{self.frame:05}.png"
             bpy.ops.screen.screenshot(filepath = expanduser(path))
 
             self.frame += 1
+            context.scene.frame_set(self.frame)
 
         return {"PASS_THROUGH"}
 
